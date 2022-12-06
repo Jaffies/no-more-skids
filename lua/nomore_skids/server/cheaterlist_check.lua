@@ -154,27 +154,12 @@ do
 			end)
 		end
 
+		-- Checking some public ban lists from russian servers (GMRP, FastRP, UnionRP)
+		-- TODO: Add some english server's banlist (for an example: Fudgy's server)
 		AddBanListCheck("GMRP", "https://app.gmrp.ru/bans/ajaxify.php?page=1&steamid=%s")
 		AddBanListCheck("FastRP", "https://desk.fastrp.ru/bans/ajaxify.php?page=1&steamid=%s")
 		AddBanListCheck("UnionRP", "https://unionrp.info/hl2rp/bans/c2/?page=1&player=%s")
 	end
-	--GMRP ban list check
-	AddCheck(function(ply, promise)
-		local url = string.format("https://app.gmrp.ru/bans/ajaxify.php?page=1&steamid=%s", ply:SteamID())
-
-		http.Fetch(url, function(body)
-			local t = JSONToTable(body)
-			local time = os.time()
-			if t and t.data then
-				for k, v in ipairs(data) do
-					if v.unbanTime and (v.unbanTime == "0" or tonumber(v.unbanTime) > time) then
-						promise:Resolve("GMRP active ban: " .. (v.reason or "Unknown reason") )
-						break
-					end
-				end
-			end
-		end)
-	end)
 
 
 
