@@ -123,6 +123,13 @@ do
 		end
 	end)
 
+	AddCheck(function(ply, promise)
+		if module:GetConfig("DisableSkidCoders") then return end
+		if ply:Nick():lower():EndsWith("code") then
+			promise:Resolve("Skid coder")
+		end
+	end)
+
 	do
 		local function AddBanListCheck(name, urls)
 			AddCheck(function(ply, promise)

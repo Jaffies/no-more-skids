@@ -4,6 +4,7 @@ return {
 	DisableSteamCheck = false, -- Disabling checking steam profile.
 	DisableLimitedAccountCheck = false, -- Disable checking limited accounts.
 	DisableFamilySharingCheck = false, -- Disable family sharing check (it is used to bypass bans).
+	DisableSkidCoders = true, -- Checks if player has `code` in the end of his nick (Sugraal.Code, RaffCode and etc)
 	DisableAliumBanList = false, -- Alium banlist
 	DisableUrbanichkaBanList = false, -- People from urbanichka's server.
 	DisableHexSkidCheckBanList = true, -- (It is recomended to be disabled). Ban list from Hex's Skid Check 2.0
