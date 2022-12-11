@@ -1,4 +1,4 @@
-local PROMISE = NMS.Module()
+local PROMISE = {}
 
 PROMISE.__index = PROMISE
 
