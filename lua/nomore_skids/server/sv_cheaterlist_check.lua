@@ -117,6 +117,7 @@ do
 
 	-- Family Sharing
 	AddCheck(function(ply, promise)
+		if module:GetConfig("DisableFamilySharingCheck") then return end
 		if ply:OwnerSteamID64() ~= ply:SteamID64() then
 			promise:Resolve("Family sharing")
 		end
