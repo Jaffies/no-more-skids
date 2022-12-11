@@ -1,7 +1,8 @@
 local module = NMS.Module()
+module.Checks = {}
 
 module:Hook("PlayerSpawn", function(ply)
-	if not ply.CheaterListChecked then
+	if not ply.CheaterListChecked and  not ply:IsBot() then
 		ply.CheaterListChecked = true
 
 		NMS.Promise(function(self)
@@ -9,30 +10,15 @@ module:Hook("PlayerSpawn", function(ply)
 				v(ply, self)
 			end
 		end):Then(function(reason)
-			NMS.Warn(ply, "|Cheaters List| " .. (reason or ""))
+			reason = reason and " " .. reason or ""
+
+			if IsValid(ply) then
+				print("|Cheaters List|", ply, reason)
+				NMS.Warn(ply, "|Cheaters List| " .. reason, module:GetConfig("WarnMethod"))
+			end
 		end)
 	end
 end)
---[[ 
-module.WarnFunctions = {
-	default = function(ply)
-		ChatPrint(string.format(module:GetConfig("Warn") or "Player %s is in cheaters list", ply:Name()))
-	end,
-	sam = function(ply)
-		local admins = {}
-
-		local plys = player.GetHumans()
-		local i = 0
-		for k, v in ipairs(plys) do
-			if v:HasPermission("see_admin_chat") and v ~= ply then
-				i = i+1
-				admins[i] = v
-			end
-		end
-
-		sam.send_message(admins, module:GetConfig("SamWarn"), {Name = ply:Nick()})
-	end,
-}--]] 
 
 do
 
@@ -50,7 +36,8 @@ do
 		
 		
 		AddCheck(function(ply, promise)
-			if not self:GetConfig("SteamAPIKey") or self:GetConfig("DisableSteamCheck") then return end
+			if not module:GetConfig("SteamAPIKey") or module:GetConfig("DisableSteamCheck") then return end
+
 		
 			local url = string.format("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=%s&steamids=%s", module:GetConfig("SteamAPIKey"), ply:SteamID64())
 		
@@ -90,11 +77,12 @@ do
 
 	-- Checking steam VAC bans without steam API (if no key provided)
 	AddCheck(function(ply, promise)
-		if self:GetConfig("SteamAPIKey") or self:GetConfig("DisableSteamCheck") then return end
+		if module:GetConfig("SteamAPIKey") or module:GetConfig("DisableSteamCheck") then return end
 
 		local url = string.format("https://steamcommunity.com/profiles/%s?xml=1", ply:SteamID64())
 
 		http.Fetch(url, function(body)
+
 
 			local strTable = {}
 			local vacBan = body:match("<vacBanned>(%d)</vacBanned>") == "1"
@@ -116,7 +104,7 @@ do
 
 	-- Limited Account check (account is limited if user didn't spent at least 5$ in that account)
 	AddCheck(function(ply, promise)
-		if self:GetConfig("DisableLimitedAccountCheck") then return end
+		if module:GetConfig("DisableLimitedAccountCheck") then return end
 
 		local url = string.format("https://steamcommunity.com/profiles/%s?xml=1", ply:SteamID64())
 
@@ -137,13 +125,15 @@ do
 	do
 		local function AddBanListCheck(name, urls)
 			AddCheck(function(ply, promise)
+				if module:GetConfig(name .. "BanList") then return end
+
 				local url = string.format(urls, ply:SteamID())
 			
 				http.Fetch(url, function(body)
-					local t = JSONToTable(body)
+					local t = util.JSONToTable(body or "")
 					local time = os.time()
 					if t and t.data then
-						for k, v in ipairs(data) do
+						for k, v in ipairs(t.data) do
 							if v.unbanTime and (v.unbanTime == "0" or tonumber(v.unbanTime) > time) then
 								promise:Resolve(name .. " active ban: " .. (v.reason or "Unknown reason") )
 								break
@@ -166,14 +156,13 @@ do
 	do
 		local function CheckBanList(name, url)
 			AddCheck(function(ply, promise)
-				if self:GetConfig("Disable".. name .. "BanList") then return end
+				if module:GetConfig("Disable".. name .. "BanList") then return end
 
 				local plyID = ply:SteamID():match("STEAM_%d:%d:(%d+)")
 
-				http.Fetch(url, function()
-
-					if body:match("STEAM_%d:%d:" .. plyID) then
-						promise.Resolve(name .. " ban list")
+				http.Fetch(url, function(body)
+					if body:match(plyID) then
+						promise:Resolve(name .. " ban list")
 					end
 				end)
 			end)
@@ -187,7 +176,7 @@ do
 
 	--Checking Hex's SkidCheck2.0 ban list
 	AddCheck(function(ply, promise)
-		if self:GetConfig("DisableHexSkidCheckBanList") then return end
+		if module:GetConfig("DisableHexSkidCheckBanList") then return end
 
 		local matchStr = "%[\"%d:" .. ply:SteamID():match("STEAM_%d:%d:(%d+)") .. "\"%]%s*\"(.*)\",\n"
 

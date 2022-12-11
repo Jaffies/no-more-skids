@@ -3,7 +3,7 @@ NMS = {
 	ServerModules = SERVER and {},
 	SharedModules = {},
 	Path = "nomore_skids/",
-	ConfigPath = "nomore_skids/configs"
+	ConfigPath = "nomore_skids/configs/"
 }
 
 AddCSLuaFile("modules.lua")
@@ -41,13 +41,13 @@ local function CreateModule(path, state)
 	if not func then return end
 
 	local module = func(path)
-	assert(istable(module), "Module doesn't return table!")
+	assert(istable(module), "Module '" .. GetModuleNameFromPath(path) .. "' doesn't return table!")
 
 	if not module.Name then
 		module.Name = GetModuleNameFromPath(path)
 	end
 
-	NMS[state .. "Modules"][module:Name()] = module
+	NMS[state .. "Modules"][module:GetName()] = module
 
 	local cfgPath = GetCFGFromPath(path)
 	local cfgExists = file.Exists(cfgPath, "LUA")

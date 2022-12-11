@@ -1,6 +1,10 @@
 local MODULE = {}
+MODULE.__index = MODULE
 
 function MODULE:GetConfig(name)
+	if not self.Config then
+		self.Config = {}
+	end
 	return self.Config[name]
 end
 
@@ -12,24 +16,30 @@ function MODULE:SetConfig(name, val)
 	self.Config[name] = val
 end
 
-function MODUlE:Hook(name, func)
+function MODULE:Hook(name, func)
+	if not self.Hooks then
+		self.Hooks = {}
+	end
 	self.Hooks[name] = func
 end
 
 function MODULE:Net(name, func)
+	if not self.Nets then
+		self.Nets = {}
+	end
 	self.Nets[name] = func
 end
 
-function MODULE:Name()
+function MODULE:GetName()
 	return self.Name and self.Name:lower()
 end
 
 function MODULE:Init(config)
-	for k, v in pairs(self.Hooks) do
-		hook.Add(k, self:Name(), v)
+	for k, v in pairs(self.Hooks or {}) do
+		hook.Add(k, "NMS.Module." ..self:GetName(), v)
 	end
 
-	for k, v in pairs(self.Nets) do
+	for k, v in pairs(self.Nets or {}) do
 		net.Receive(k, v)
 	end
 
