@@ -1,3 +1,5 @@
+local module = NMS.Module()
+
 local PROMISE = {}
 
 PROMISE.__index = PROMISE
@@ -19,7 +21,7 @@ function PROMISE:Reject(...)
 	end
 end
 
-function NMS.Promise(func)
+function module:Promise(func)
 	local promise = setmetatable({}, PROMISE)
 
 	if func then
@@ -31,4 +33,6 @@ function NMS.Promise(func)
 	return promise
 end
 
-return NMS.Module()
+NMS.Promise = function(func) return module:Promise(func) end
+
+return module

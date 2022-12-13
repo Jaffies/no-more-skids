@@ -1,11 +1,15 @@
 local module = NMS.Module()
+
+local warn = module:Require("sv_warn") -- Server автоматом будет стоять 
+local promise = module:Require("sh_promise", "Shared") -- оно шередовское
+
 module.Checks = {}
 
 module:Hook("PlayerSpawn", function(ply)
-	if not ply.CheaterListChecked and  not ply:IsBot() then
+	if --[[ not ply.CheaterListChecked and--]]   not ply:IsBot() then
 		ply.CheaterListChecked = true
 
-		NMS.Promise(function(self)
+		promise:Promise(function(self)
 			for k, v in ipairs(module.Checks) do
 				v(ply, self)
 			end
@@ -14,7 +18,7 @@ module:Hook("PlayerSpawn", function(ply)
 
 			if IsValid(ply) then
 				print("|Cheaters List|", ply, reason)
-				NMS.Warn(ply, "|Cheaters List| " .. reason, module:GetConfig("WarnMethod"))
+				warn:Warn(ply, "|Cheaters List| " .. reason, module:GetConfig("WarnMethod"))
 			end
 		end)
 	end

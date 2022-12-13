@@ -47,6 +47,8 @@ local function CreateModule(path, state)
 		module.Name = GetModuleNameFromPath(path)
 	end
 
+	module.State = state
+
 	NMS[state .. "Modules"][module:GetName()] = module
 
 	local cfgPath = GetCFGFromPath(path)
@@ -65,4 +67,14 @@ end
 
 IterateFolder("server", "Server")
 IterateFolder("client", "Client")
-IterateFolder("Shared", "Shared")
+IterateFolder("shared", "Shared")
+
+hook.Run("NMS.Module.Loaded")
+
+for i, state in ipairs({"Server", "Client", "Shared"}) do
+	for k, v in pairs(NMS[state .. "Modules"] or {}) do
+		v:RequireModules()
+	end
+end
+
+hook.Run("NMS.Module.LoadedRequirements")

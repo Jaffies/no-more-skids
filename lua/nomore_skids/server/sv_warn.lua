@@ -1,6 +1,7 @@
 local module = NMS.Module()
 
-function NMS.Warn(ply, reason, method)
+function module:Warn(ply, reason, method)
+
 	assert(IsValid(ply) and ply:IsPlayer(), "ply argument is not player!")
 	assert(isstring(reason), "reason is not string!")
 	assert(isstring(method), "method is not string!")
@@ -12,6 +13,8 @@ function NMS.Warn(ply, reason, method)
 
 	func(ply, reason)
 end
+
+NMS.Warn = function(ply, reason, method) module:Warn(ply, reason, method) end
 
 module.WarnFunctions = {}
 
@@ -72,7 +75,7 @@ AddWarnMethod("SAM", function(ply, reason)
 
 	local i = 0
 	for k, v in ipairs(player.GetHumans()) do
-		if v:HasPermission("see_admin_chat") --[[ and v ~= ply--]]  then
+		if v:HasPermission("see_admin_chat")  and v ~= ply  then
 			i = i+1
 			admins[i] = v
 		end
@@ -84,7 +87,7 @@ end)
 AddWarnMethod("Default", function(ply, reason)
 	local i = 0
 	for k, v in ipairs(player.GetHumans()) do
-		if v:IsAdmin() --[[ and v~= ply--]]  then
+		if v:IsAdmin()  and v~= ply  then
 			v:ChatPrint(module:GetConfig("WarnMessage"):format(ply:Nick(), ply:SteamID(), reason))
 		end
 	end
