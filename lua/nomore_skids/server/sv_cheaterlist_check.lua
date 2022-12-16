@@ -6,7 +6,7 @@ local promise = module:Require("sh_promise", "Shared") -- оно шередов�
 module.Checks = {}
 
 module:Hook("PlayerSpawn", function(ply)
-	if --[[ not ply.CheaterListChecked and--]]   not ply:IsBot() then
+	if  not ply.CheaterListChecked and not ply:IsBot() then
 		ply.CheaterListChecked = true
 
 		promise:Promise(function(self)

@@ -20,8 +20,6 @@ local promiseTable = {
 		assert(obj.__name, "No given module name to lookup")
 
 		local module = obj.__module:Get(obj.__name, obj.__state)
-
-		assert(module, "No required module found to index!")
 		
 		return module[key]
 	end,
@@ -33,7 +31,8 @@ local promiseTable = {
 
 		local module = obj.__module:Get(obj.__name, obj.__state)
 
-		assert(module, "No required module found to index!")
+		assert(module, "No required module " .. obj.__name .. " from " .. (obj.__module.Name or "Unknown") .. " found to index! ")
+
 		
 		module[key] = value
 	end,
@@ -57,7 +56,7 @@ function MODULE:Get(name, state)
 
 	assert(isstring(name), "Name is not string!")
 	assert(NMS[state .. "Modules"], "Invalid State")
-	assert(self.Modules and self.Modules[state] and self.Modules[state][name], "No required " .. state:lower() .. " module " .. name .. " is found!")
+	assert(self.Modules and self.Modules[state] and self.Modules[state][name], "No required " .. state:lower() .. " module " .. name .. " from " .. (self.Name or "Unknown") .. " is found!")
 
 	return self.Modules[state][name]
 end
@@ -97,9 +96,11 @@ function MODULE:Init(config)
 		net.Receive(k, v)
 	end
 
-	if config then
-		self.Config = config
-	end
+	local cfg = config or {}
+
+	hook.Run("NMS.Module.CFG", cfg)
+
+	self.Config = cfg
 end
 
 local states = {"Shared", "Client", "Server"}
@@ -115,11 +116,14 @@ function MODULE:RequireModules()
 		
 		for k, v in pairs(self.Requirements and self.Requirements[state] or {}) do
 			local module = NMS[state .. "Modules"][k]
-			assert(istable(module), "No given module found! (" .. k .. ")")
+			
+			assert(istable(module), "No given " .. state .. " module found! (" .. k .. ") from " .. (self.Name or "Unknown") )
 			
 			stateTable[k] = module
 		end
 	end
+
+	self.Requirements = nil
 end
 
 function NMS.Module()

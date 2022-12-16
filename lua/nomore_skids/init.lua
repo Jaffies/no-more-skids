@@ -28,6 +28,12 @@ local includes = {
 	end,
 }
 
+local includes2 = {
+	Client = function() return CLIENT end,
+	Server = function() return SERVER end,
+	Shared = function() return true end,
+}
+
 local function GetModuleNameFromPath(path)
 	return path:match("/(.+)%.lua")
 end
@@ -41,6 +47,16 @@ local function CreateModule(path, state)
 	if not func then return end
 
 	local module = func(path)
+
+	local cfgPath = GetCFGFromPath(path)
+	local cfgExists = file.Exists(cfgPath, "LUA")
+
+	local cfg = cfgExists and includes[state](cfgPath) or nil
+
+	if not includes2[state]() then
+		return
+	end
+	
 	assert(istable(module), "Module '" .. GetModuleNameFromPath(path) .. "' doesn't return table!")
 
 	if not module.Name then
@@ -51,10 +67,7 @@ local function CreateModule(path, state)
 
 	NMS[state .. "Modules"][module:GetName()] = module
 
-	local cfgPath = GetCFGFromPath(path)
-	local cfgExists = file.Exists(cfgPath, "LUA")
-
-	module:Init(cfgExists and includes[state](cfgPath))
+	module:Init(cfg)
 end
 
 local function IterateFolder(path, state)
