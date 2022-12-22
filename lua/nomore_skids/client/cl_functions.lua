@@ -3,18 +3,22 @@ local module = NMS.Module()
 module.DetouredFunctions = setmetatable({}, {__mode = "k"})
 module.DetouredFunctionsToOriginal = setmetatable({}, {__mode = "kv"})
 
+local debug_traceback = debug.traceback
+local debug_getinfo = debug.getinfo
+local debug_sethook = debug.sethook
+
 function module:Detour(func)
 	local t = {}
 	self.DetouredFunctions[func] = t
 
 	local detourFunc = function(...)
-		local traceback = debug.traceback(2)
+		local traceback = debug_traceback(2)
 		t.tracebacks = (t.tracebacks or -1) + 1
 
 		t.traceback = t.traceback or {}
 		t.traceback[t.tracebacks%self:GetConfig("TracebackNum")+1] = traceback:Trim("\n")
 
-		local info = debug.getinfo(2)
+		local info = debug_getinfo(2)
 
 		t.calls = (t.calls or -1) + 1
 		t.call = t.call or {}
@@ -23,12 +27,12 @@ function module:Detour(func)
 		local lines = {}
 		local i = 0
 
-		debug.sethook(function(str, line)
-			lines[line] = debug.getinfo(2)
+		debug_sethook(function(str, line)
+			lines[line] = debug_getinfo(2)
 		end, "l")
 		local a, b, c, d, d, e = func(...)
 
-		debug.sethook()
+		debug_sethook()
 		t.lines = lines
 
 		return a, b, c, d, e
@@ -124,5 +128,64 @@ end
 function module:GetOriginalGetInfo(func)
 	return debug.getinfo(self:GetFunction(func))
 end
+
+function module:GetOriginalJITGetInfo(func)
+	return jit.util.funcinfo(self:GetFunction(func))
+end
+
+function module:GetOriginalJITByteCodes(func)
+	local orig = self:GetFunction(func)
+	
+	local bytecodes = {}
+	if debug.getinfo(orig).what == "C" then return bytecodes end
+
+	local i = 0
+	while true do
+		local instruction, opcode = jit.util.funcbc(orig, i)
+		if not instruction then break end
+		i = i+1
+		bytecodes[i] = {instruction, opcode}
+	end
+
+	return bytecodes
+end
+
+function module:GetOriginalJITConsts(func)
+	local orig = self:GetFunction(func)
+	
+	local consts = {}
+	if debug.getinfo(orig).what == "C" then return consts end
+
+	local i = 0
+	while true do
+		local const = jit.util.funck(orig, i)
+		print(const)
+		if const == nil then break end
+		i = i-1
+		consts[i] = const
+	end
+
+	return consts
+end
+
+function module:GetOriginalJITUVNames(func)
+	local orig = self:GetFunction(func)
+
+	local upvalueNames = {}
+	if debug.getinfo(orig).what == "C" then return upvalueNames end
+
+	local i = 0
+	while true do
+		local uvName = jit.util.funcuvname(orig, i)
+		if uvName == nil then break end
+		i = i+1
+		upvalueNames[i] = uvName
+	end
+
+	return upvalueNames
+end
+
+
+
 
 return module

@@ -80,7 +80,7 @@ function MODULE:Net(name, func)
 	if not self.Nets then
 		self.Nets = {}
 	end
-	self.Nets[name] = func
+	self.Nets[name] = func or true
 end
 
 function MODULE:GetName()
@@ -93,7 +93,13 @@ function MODULE:Init(config)
 	end
 
 	for k, v in pairs(self.Nets or {}) do
-		net.Receive(k, v)
+		if SERVER then
+			util.AddNetworkString(k)
+		end
+		
+		if isfunction(v) then
+			net.Receive(k, v)
+		end
 	end
 
 	local cfg = config or {}

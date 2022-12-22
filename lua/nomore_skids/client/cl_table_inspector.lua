@@ -1,5 +1,7 @@
 local module = NMS.Module()
 
+local icons = module:Require("cl_icons")
+
 local function GetValueInfo(val)
 	local text = module:GetConfig("Text")
 
@@ -24,26 +26,22 @@ function PANEL:Init()
 	self.HorizontalDivider:Dock(FILL)
 end
 
-local icons = {
-	["string"] = "icon16/page_white_text.png",
-	["number"] = "icon16/coins.png",
-	["table"] = "icon16/layout.png",
-	["function"] = "icon16/joystick.png",
-	["thread"] = "icon16/door_in.png",
-	["Vector"] = "icon16/arrow_switch.png",
-	["Player"] = "icon16/user.png",
-	["Entity"] = "icon16/page.png",
-	["Angle"] = "icon16/time.png",
-	["userdata"] = "icon16/table.png",
-}
+local function DoClickFunc(pnl)
+	local info = pnl.Information
+
+	info:SetText("")
+	info:InsertColorChange(255,255,255,255)
+	info:AppendText(GetValueInfo(pnl.Value))
+end
 
 
-local function IterateTable(info, node, tab, path)
+local function IterateTable(info, node, tab)
 	path = path or ""
 
 	local i = 0
 	for k, v in pairs(tab) do
 		i = i+1
+		
 		if i > module:GetConfig("MaxLines") then
 			break
 		end
@@ -51,18 +49,15 @@ local function IterateTable(info, node, tab, path)
 		local valType = type(v)
 		local sameTable = v == tab
 
-		local node2 = node:AddNode(tostring(k), icons[valType])
+		local node2 = node:AddNode(tostring(k), icons:GetIcon(valType))
 
-		function node2:DoClick()
-			info:SetText("")
-			info:InsertColorChange(255,255,255,255)
-			info:AppendText(GetValueInfo(v))
-		end
+		node2.Value = v
+		node2.Information = info
+		node2.DoClick = DoClickFunc
 
 		node2:SetTooltip(tostring(v))
-		
 		if valType == "table" and not sameTable then
-			IterateTable(info, node2, v, path .. tostring(k) .. "->")
+			IterateTable(info, node2, v)
 		end
 	end
 end
