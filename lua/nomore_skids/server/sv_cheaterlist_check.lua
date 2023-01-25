@@ -17,7 +17,6 @@ module:Hook("PlayerSpawn", function(ply)
 			reason = reason and " " .. reason or ""
 
 			if IsValid(ply) then
-				print("|Cheaters List|", ply, reason)
 				warn:Warn(ply, "|Cheaters List| " .. reason, module:GetConfig("WarnMethod"))
 			end
 		end)
@@ -165,6 +164,17 @@ do
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 	do
 		local function CheckBanList(name, url)
 			AddCheck(function(ply, promise)
@@ -190,7 +200,7 @@ do
 	AddCheck(function(ply, promise)
 		if module:GetConfig("DisableHexSkidCheckBanList") then return end
 
-		local matchStr = "%[\"%d:" .. ply:SteamID():match("STEAM_%d:%d:(%d+)") .. "\"%]%s*\"(.*)\",\n"
+		local matchStr = "%[\"%d:" .. ply:SteamID():match("STEAM_%d:%d:(%d+)") .. "\"%]%s*\"([^\"]*)\",\n"
 
 		for i=65, 85 do
 			local url = string.format("https://raw.githubusercontent.com/ThatLing/hex-memorial/master/Repos/SkidCheck-2.0-master/lua/skidcheck/sv_SkidList_%c.lua", i)

@@ -156,13 +156,12 @@ function module:GetOriginalJITConsts(func)
 	local consts = {}
 	if debug.getinfo(orig).what == "C" then return consts end
 
-	local i = 0
+	local i = -1
 	while true do
 		local const = jit.util.funck(orig, i)
-		print(const)
 		if const == nil then break end
+		consts[-i] = const
 		i = i-1
-		consts[i] = const
 	end
 
 	return consts

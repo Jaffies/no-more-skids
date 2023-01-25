@@ -11,6 +11,7 @@ function module:Warn(ply, reason, method)
 
 	if hook.Run("NMS.Warn", ply,reason, method) then return end
 
+	print("Warned", ply, "Reason -", reason)
 	func(ply, reason)
 end
 
@@ -81,7 +82,7 @@ AddWarnMethod("SAM", function(ply, reason)
 		end
 	end
 
-	sam.send_message(admins, module:GetConfig("SAMWarnMessage"), {Name = ply:Nick(), Reason=reason, ID=ply:SteamID()})
+	sam.player.send_message(admins, module:GetConfig("SAMWarnMessage"), {Name = ply:Nick(), Reason=reason, ID=ply:SteamID()})
 end)
 
 AddWarnMethod("Default", function(ply, reason)

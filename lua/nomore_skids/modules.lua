@@ -135,3 +135,7 @@ end
 function NMS.Module()
 	return setmetatable({}, MODULE)
 end
+
+function IsNMSModule(tab)
+	return getmetatable(tab) == MODULE
+end

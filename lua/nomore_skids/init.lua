@@ -57,7 +57,7 @@ local function CreateModule(path, state)
 		return
 	end
 	
-	assert(istable(module), "Module '" .. GetModuleNameFromPath(path) .. "' doesn't return table!")
+	assert(IsNMSModule(module), "Module '" .. GetModuleNameFromPath(path) .. "' doesn't return module!")
 
 	if not module.Name then
 		module.Name = GetModuleNameFromPath(path)
