@@ -22,7 +22,7 @@ module:Hook("PlayerSpawn", function(ply)
 		end
 
 		if ply.Exposion < CurTime() then
-			warn:Warn(ply, "Hook/Command exposion fail", sh_networking:GetConfig("FailExposeMethdod"))
+			warn:Warn(ply, "Hook/Command exposion fail", module:GetConfig("FailExposeMethdod"))
 		end
 	end
 end)
@@ -39,7 +39,7 @@ function module:RequestHook(ply, hook,name, callback)
 
 	timer.Simple(sh_networking:GetConfig("WaitTime"), function()
 		if IsValid(ply) and noHook then
-			warn:Warn(ply, "Request hook fail", sh_networking:GetConfig("FailRequestMethdod"))
+			warn:Warn(ply, "Request hook fail", module:GetConfig("FailRequestMethdod"))
 		end
 	end)
 
@@ -58,7 +58,7 @@ function module:RequestCMD(ply, name, callback)
 
 	timer.Simple(sh_networking:GetConfig("WaitTime"), function()
 		if IsValid(ply) and noCMD then
-			warn:Warn(ply, "Request CMD fail", sh_networking:GetConfig("FailRequestMethdod"))
+			warn:Warn(ply, "Request CMD fail", module:GetConfig("FailRequestMethdod"))
 		end
 	end)
 

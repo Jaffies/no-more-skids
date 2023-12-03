@@ -12,20 +12,20 @@ local module = NMS.Module()
 --]] 
 
 function module:Encrypt(str, elevation)
-	local result = str:gsub(".", function(char) return string.char((char:byte()+(elevation or module:GetConfig("Elevation")) )%255 ) end)
+	local result = str:gsub(".", function(char) return string.char((char:byte()+(elevation or module:GetConfig("Elevation")) )%256 ) end)
 
 	return result
 end
 
 function module:Decrypt(str, elevation)
-	local result = str:gsub(".", function(char) return string.char((char:byte()-(elevation or module:GetConfig("Elevation")) )%255 ) end)
+	local result = str:gsub(".", function(char) return string.char((char:byte()-(elevation or module:GetConfig("Elevation")) )%256 ) end)
 
 	return result
 end
 
 local bytesLookup = {}
-for i=0, 32 do
-	bytesLookup[i] = 2^i
+for i = 1, 32 do
+	bytesLookup[i] = 2^(i-1)
 end
 
 function module:Number(num, bytes)

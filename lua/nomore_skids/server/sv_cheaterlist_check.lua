@@ -9,16 +9,26 @@ module:Hook("PlayerSpawn", function(ply)
 	if  not ply.CheaterListChecked and not ply:IsBot() then
 		ply.CheaterListChecked = true
 
+		local reasons = {}
+
+		timer.Simple(15, function()
+			if not IsValid(ply) then return end
+
+			local txt = table.concat(reasons, ', ')
+			if txt == '' then return end
+
+			reasons = nil
+
+			warn:Warn(ply, "|Cheaters List| " .. txt, module:GetConfig("WarnMethod"))			
+		end)
+
 		promise:Promise(function(self)
 			for k, v in ipairs(module.Checks) do
 				v(ply, self)
 			end
 		end):Then(function(reason)
-			reason = reason and " " .. reason or ""
-
-			if IsValid(ply) then
-				warn:Warn(ply, "|Cheaters List| " .. reason, module:GetConfig("WarnMethod"))
-			end
+			if not reasons then return end
+			reasons[#reasons+1] = reason
 		end)
 	end
 end)

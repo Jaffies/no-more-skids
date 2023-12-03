@@ -125,126 +125,20 @@ end)
 --]] 
 
 function module:WriteFunction(data, light)
-	local calls
-	local tracebacks
-	local lines
-	local metatable
-	local fenv
-	local upvalues
-	local locals
-	local getinfo
-	local funcinfo
-	local bytecodes
-	local constants
-	local uvNames
+	local getinfo -- оставить
+	local funcinfo -- убрать
+	local constants -- оставить
+	local uvNames -- оставить
 	local emptyTable = {}
 
 	if isfunction(data) then
-		calls = functions:GetOriginalCalls(data) or emptyTable
-		tracebacks = not light and functions:GetOriginalTracebacks(data) or emptyTable
-		lines = not light and functions:GetOriginalLines(data) or emptyTable
-		metatable = functions:GetOriginalMetaTable(data) or emptyTable
-		local env = functions:GetOriginalFENV(data) or emptyTable
-
-		if env ~= _G then
-			fenv = env
-		else
-			fenv = emptyTable
-		end
-
-		upvalues = not light and functions:GetOriginalUpvalues(data) or emptyTable
-		locals = functions:GetOriginalLocalVars(data) or emptyTable
 		getinfo = functions:GetOriginalGetInfo(data) or emptyTable
 		funcinfo = not light and functions:GetOriginalJITGetInfo(data) or emptyTable
-		bytecodes = functions:GetOriginalJITByteCodes(data) or emptyTable
-		constants = functions:GetOriginalJITConsts(data) or emptyTable
 		uvNames = functions:GetOriginalJITUVNames(data) or emptyTable
 	else
-		calls = data.calls or emptyTable
-		tracebacks = not light and data.tracebacks or emptyTable
-		lines = not light and data.lines or emptyTable
-		metatable = data.metatable or emptyTable
-		fenv = data.fenv or emptyTable
-		upvalues = not light and data.upvalues or emptyTable
-		locals = data.locals or emptyTable
 		getinfo = data.getinfo or emptyTable
 		funcinfo = not light and data.funcinfo or emptyTable
-		bytecodes = data.bytecodes or emptyTable
-		constants = data.constants or emptyTable
 		uvNames = data.uvNames or emptyTable
-	end
-
-	do
-		local numCalls = #calls
-
-		net.WriteUInt(numCalls, 16)
-		for i=1, numCalls do
-			net.WriteString(calls[i])
-		end
-	end
-
-	do
-		local numTracebacks = #tracebacks
-
-		net.WriteUInt(numTracebacks, 16)
-		for i=1, numTracebacks do
-			net.WriteString(tracebacks[i])
-		end
-	end
-
-	do
-		local numLines = table.Count(lines)
-
-		net.WriteUInt(numLines, 16)
-		for k, v in pairs(lines) do
-			net.WriteUInt(k, 16)
-			net.WriteTable(v)
-		end
-	end
-
-
-	do
-		net.WriteTable(metatable)
-	end
-
-	do
-		net.WriteTable(fenv)
-	end
-
-	do
-		local bitCount = math.ceil(math.log(module:GetConfig("UpvalueLimit"), 2))
-		local count = math.min(2^bitCount-1, table.Count(upvalues))
-		net.WriteUInt(count, bitCount)
-
-		local i = 0
-		for k, v in pairs(upvalues) do
-			i = i + 1
-
-			if i>count then
-				break
-			end
-			net.WriteString(k)
-			local var = v
-			
-			if not net.WriteVars[TypeID(var)] or var == data or type(var) == "table" and light then
-				if type(var) == "table" then
-					var = table.ToString(v, "", true)
-				else
-					var = tostring(v)
-				end
-			end
-			
-			net.WriteType(var)
-		end
-	end
-
-	do
-		local count = table.Count(locals)
-		net.WriteUInt(count, 16)
-
-		for k, v in pairs(locals) do
-			net.WriteString(k)
-		end
 	end
 
 	do
@@ -253,18 +147,7 @@ function module:WriteFunction(data, light)
 
 		for k, v in pairs(getinfo) do
 			net.WriteString(k)
-			local var = v
-
-			if not net.WriteVars[TypeID(var)] or var == data or type(var) == "table" and light then
-				if type(var) == "table" then
-					var = table.ToString(v, "", true)
-				else
-					var = tostring(v)
-				end
-			end
-
-			net.WriteType(var)
-
+			net.WriteString(tostring(v))			
 		end
 	end
 
@@ -274,40 +157,7 @@ function module:WriteFunction(data, light)
 
 		for k, v in pairs(funcinfo) do
 			net.WriteString(k)
-			local var = v
-
-			if not net.WriteVars[TypeID(var)] or var == data or type(var) == "table" and light then
-				if type(var) == "table" then
-					var = table.ToString(v, "", true)
-				else
-					var = tostring(v)
-				end
-			end
-			
-			net.WriteType(var)
-		end
-	end
-
-	do
-		local bitCount = math.ceil(math.log(module:GetConfig("ByteCodeLimit"), 2))
-		local count = math.min(2^bitCount-1,#bytecodes)
-		net.WriteUInt(count, bitCount)
-
-		for i=1, count do
-			local t = bytecodes[i]
-			net.WriteUInt(t[1], 32)
-			net.WriteUInt(t[2], 32)
-		end
-	end
-
-
-	do
-		local bitCount = math.ceil(math.log(module:GetConfig("ConstantLimit"), 2))
-		local count = math.min(2^bitCount-1,#constants)
-		net.WriteUInt(count, bitCount)
-
-		for i=1, count do
-			net.WriteType(constants[i])
+			new.WriteString(tostring(v))
 		end
 	end
 
@@ -325,76 +175,11 @@ function module:ReadFunction()
 	local t = {isFunction = true}
 
 	do
-		local calls = {}
-		local num = net.ReadUInt(16)
-
-		for i=1, num do
-			calls[i] = net.ReadString()
-		end
-
-		t.calls = calls
-	end
-
-	do
-		local tracebacks = {}
-		local num = net.ReadUInt(16)
-
-		for i=1, num do
-			tracebacks[i] = net.ReadString()
-		end
-
-		t.tracebacks = tracebacks
-	end
-
-	do
-		local lines = {}
-		local num = net.ReadUInt(16)
-
-		for i=1, num do
-			lines[net.ReadUInt(16)] = net.ReadTable()
-		end
-
-		t.lines = lines
-	end
-
-
-	do
-		t.metatable = net.ReadTable()
-	end
-
-	do
-		t.fenv = net.ReadTable()
-	end
-
-	do 
-		local upvalues = {}
-		local bitCount = math.ceil(math.log(module:GetConfig("UpvalueLimit"), 2))
-		local count = net.ReadUInt(bitCount)
-
-		for i=1, count do
-			upvalues[net.ReadString()] = net.ReadType()
-		end
-
-		t.upvalues = upvalues
-	end
-
-	do
-		local locals = {}
-		local count = net.ReadUInt(16)
-
-		for i=1, count do
-			locals[net.ReadString()] = "nil"
-		end
-
-		t.locals = locals
-	end
-
-	do
 		local getinfo = {}
 		local count = net.ReadUInt(16)
 
 		for i=1, count do
-			getinfo[net.ReadString()] = net.ReadType()
+			getinfo[net.ReadString()] = net.ReadString()
 		end
 
 		t.getinfo = getinfo
@@ -405,39 +190,10 @@ function module:ReadFunction()
 		local count = net.ReadUInt(16)
 
 		for i=1, count do
-			funcinfo[net.ReadString()] = net.ReadType()
+			funcinfo[net.ReadString()] = net.ReadString()
 		end
 
 		t.funcinfo = funcinfo
-	end
-
-	do
-		local bytecodes = {}
-		local bitCount = math.ceil(math.log(module:GetConfig("ByteCodeLimit"), 2))
-		local count = net.ReadUInt(bitCount)
-
-		for i=1, count do
-			local tab = {}
-			tab[1] = net.ReadUInt(32)
-			tab[2] = net.ReadUInt(32)
-
-			bytecodes[i] = tab
-		end
-
-		t.bytecodes = bytecodes
-	end
-
-
-	do
-		local constants = {}
-		local bitCount = math.ceil(math.log(module:GetConfig("ConstantLimit"), 2))
-		local count = net.ReadUInt(bitCount)
-
-		for i=1, count do
-			constants[i] = net.ReadType()
-		end
-
-		t.constants = constants
 	end
 
 	do

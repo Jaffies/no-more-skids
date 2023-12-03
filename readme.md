@@ -18,4 +18,4 @@ This is not an anti-cheat, but you can make modules to detect cheats
 
 Important:
 
-If you want to use Discord webhooks, you should download gmod-chttp from github.
+If you want to use Discord webhooks, you should download gmsv_reqwests from github.

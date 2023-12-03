@@ -11,7 +11,7 @@ function module:Warn(ply, reason, method)
 
 	if hook.Run("NMS.Warn", ply,reason, method) then return end
 
-	print("Warned", ply, "Reason -", reason)
+	print("Warned", ply, "Reason -", reason, 'method', method)
 	func(ply, reason)
 end
 
@@ -26,7 +26,7 @@ end
 AddWarnMethod("Discord", function(ply, reason)
 	local webHook = module:GetConfig("WebHook")
 	assert(isstring(webHook), "Web Hook is not a string!")
-	assert(CHTTP, "No CHTTP module found!")
+	assert(reqwest, "No reqwests module found!")
 
 	local bodyStr = string.format([[{
 		"username":%q,
@@ -42,17 +42,18 @@ AddWarnMethod("Discord", function(ply, reason)
 		module:GetConfig("WebHookAvatarURL"),
 		module:GetConfig("WebHookContent"),
 		module:GetConfig("WebHookTitle"),
-		module:GetConfig("WebHookEmbedContent"):format(ply:Nick(), ply:SteamID(), ply:SteamID64(), reason),
+		module:GetConfig("WebHookEmbedContent"):format(ply:Nick(), ply:SteamID(), ply:SteamID64(), reason):gsub('[\n\'\"]|', ''),
 		module:GetConfig("WebHookEmbedColor")
 	)
 
-	CHTTP({
+	reqwest({
 		method = "POST",
 		url = webHook,
 		body = bodyStr,
 		headers = {
 			["User-Agent"] = "Google Chrome",
 		},
+		success = print,
 		type = "application/json",
 	})
 end)
@@ -76,7 +77,7 @@ AddWarnMethod("SAM", function(ply, reason)
 
 	local i = 0
 	for k, v in ipairs(player.GetHumans()) do
-		if v:HasPermission("see_admin_chat")  and v ~= ply  then
+		if v:HasPermission("see_admin_chat") then
 			i = i+1
 			admins[i] = v
 		end
@@ -88,7 +89,7 @@ end)
 AddWarnMethod("Default", function(ply, reason)
 	local i = 0
 	for k, v in ipairs(player.GetHumans()) do
-		if v:IsAdmin()  and v~= ply  then
+		if v:IsAdmin() then
 			v:ChatPrint(module:GetConfig("WarnMessage"):format(ply:Nick(), ply:SteamID(), reason))
 		end
 	end
